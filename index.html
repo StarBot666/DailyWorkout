@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daily Moves</title>
+<style>
+:root{--bg:#eef1fa;--ink:#161d3a;--mute:#5a6486;--card:#ffffff;--line:#d9def0;--tint:#e4e8fb;--acc:#3b4fe0;--accInk:#ffffff;--hot:#ff6a45;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1226;--ink:#e9ecfb;--mute:#9aa3c8;--card:#181c38;--line:#2a3058;--tint:#20254a;--acc:#8c9bff;--accInk:#0f1226;--hot:#ff8a68}}
+:root[data-theme="dark"]{--bg:#0f1226;--ink:#e9ecfb;--mute:#9aa3c8;--card:#181c38;--line:#2a3058;--tint:#20254a;--acc:#8c9bff;--accInk:#0f1226;--hot:#ff8a68}
+*{box-sizing:border-box}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 100px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+main{max-width:480px;margin:0 auto;padding:20px 16px 48px}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:2.1rem;margin:0;letter-spacing:-.01em}
+h2{font-family:Georgia,serif;font-size:1.25rem;margin:26px 0 10px}
+.sub{color:var(--mute);margin:2px 0 16px}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 6px;text-align:center}
+.stat b{display:block;font-size:1.35rem;font-family:Georgia,serif}
+.stat span{color:var(--mute);font-size:.78rem}
+.timer{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:14px;background:var(--acc);color:var(--accInk);border-radius:22px;padding:12px 16px;box-shadow:0 8px 24px rgba(30,40,120,.22)}
+.timer.done{background:var(--hot);color:#fff}
+.ringw{position:relative;width:76px;height:76px;flex:none}
+.ringw svg{width:100%;height:100%}
+.rb{fill:none;stroke:rgba(255,255,255,.28);stroke-width:6}
+.rf{fill:none;stroke:currentColor;stroke-width:6;stroke-linecap:round;stroke-dasharray:201.06;stroke-dashoffset:201.06;transition:stroke-dashoffset .25s linear}
+.ringw span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.tr{flex:1;min-width:0}
+.name{font-weight:700;min-height:1.4em;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btns{display:flex;gap:8px}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:8px 16px;font-weight:700}
+button:focus-visible,input:focus-visible{outline:3px solid var(--hot);outline-offset:2px}
+.timer button{background:var(--accInk);color:var(--acc)}
+.timer.done button{color:var(--hot)}
+.timer button.ghost{background:transparent;color:inherit;border:1px solid currentColor}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+li{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
+li.done{opacity:.7}
+li.done .t b{text-decoration:line-through}
+.row{display:flex;align-items:center;gap:12px}
+.row input{width:26px;height:26px;accent-color:var(--acc);flex:none}
+.t{flex:1;min-width:0}
+.t small{display:block;color:var(--mute)}
+.go{background:var(--acc);color:var(--accInk);padding:8px 14px;flex:none}
+svg.fig{display:block;width:100%;height:auto;margin-top:10px;background:var(--tint);border-radius:14px}
+.fig line{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.fig circle{fill:var(--card);stroke:var(--acc);stroke-width:3.5}
+.fig .fl{stroke:var(--line);stroke-width:2}
+.fig .wl{stroke:var(--mute);stroke-width:3}
+.fig .ar{fill:var(--acc)}
+.fig text{fill:var(--mute);font-size:7px;font-family:inherit}
+.hint{color:var(--mute);margin:0 0 10px}
+.more{display:block;width:100%;margin-top:12px;background:transparent;color:var(--acc);border:2px dashed var(--acc);padding:12px}
+.more[hidden]{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:26px}
+.card h2{margin-top:0}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{background:var(--tint);color:var(--mute);padding:6px 14px}
+.tabs button[aria-pressed="true"]{background:var(--acc);color:var(--accInk)}
+.sum{margin:0 0 12px}
+.chart{display:flex;align-items:flex-end;gap:3px;height:112px}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.bar{width:100%;max-width:28px;border-radius:5px 5px 2px 2px;background:var(--line)}
+.bar.has{background:var(--acc)}
+.bar.now{background:var(--hot)}
+.col span{font-size:.7rem;color:var(--mute);height:16px;line-height:16px}
+.reset{display:block;margin:22px auto 0;background:none;color:var(--mute);text-decoration:underline;font-weight:400}
+.ov{position:fixed;inset:0;z-index:20;background:rgba(10,14,40,.62);display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden}
+.ov[hidden]{display:none}
+.pop{position:relative;background:var(--card);border-radius:24px;padding:26px 22px;max-width:340px;width:100%;text-align:center;animation:pop .35s ease-out}
+.pop .big{font-size:3rem}
+.pop h2{margin:4px 0 6px;font-size:1.7rem}
+.pop p{color:var(--mute);margin:0 0 18px}
+.pop button{display:block;width:100%;margin-top:8px;padding:12px;background:var(--acc);color:var(--accInk)}
+.pop button.g{background:transparent;color:var(--mute);font-weight:400}
+.conf span{position:absolute;top:-20px;width:9px;height:15px;border-radius:2px;animation:fall 2.6s linear forwards}
+.bgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bd{text-align:center;padding:10px 4px;border-radius:14px;background:var(--tint)}
+.bd i{display:flex;width:54px;height:54px;margin:0 auto 4px;border-radius:50%;background:linear-gradient(135deg,#ffd35a,#ff9d3c);align-items:center;justify-content:center;font-style:normal;font-size:1.7rem}
+.bd.lock i{background:var(--line);filter:grayscale(1);opacity:.55}
+.bd b{display:block;font-size:.82rem}
+.bd small{display:block;color:var(--mute);font-size:.72rem}
+.share{display:block;width:100%;margin-top:14px;background:var(--acc);color:var(--accInk);padding:12px}
+.pop{max-height:calc(100% - 8px);overflow:auto}
+.pop canvas{width:100%;height:auto;border-radius:14px;display:block;margin-bottom:6px}
+.pop button.s{background:var(--tint);color:var(--ink)}
+.pop .badge{width:96px;height:96px;margin:0 auto 6px;border-radius:50%;background:linear-gradient(135deg,#ffd35a,#ff9d3c);display:flex;align-items:center;justify-content:center;font-size:3.2rem;box-shadow:0 6px 18px rgba(255,157,60,.45)}
+.nb{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:0 0 12px}
+.nb span{background:var(--tint);border-radius:999px;padding:4px 10px;font-size:.85rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;z-index:30;font-weight:700;white-space:nowrap}
+.toast[hidden]{display:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.rf{transition:none}.conf{display:none}.pop{animation:none}}
+
+:root{--h1:#3b4fe0;--h2:#7a3de0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--h1:#4254e6;--h2:#6d3fd6}}
+:root[data-theme="dark"]{--h1:#4254e6;--h2:#6d3fd6}
+main{padding-bottom:150px}
+.hero{display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(135deg,var(--h1),var(--h2));color:#fff;border-radius:26px;padding:20px 18px;margin-bottom:14px;box-shadow:0 12px 30px rgba(59,79,224,.28)}
+.hero h1{color:#fff}.hero .sub{color:rgba(255,255,255,.82);margin:2px 0 10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.18);border-radius:999px;padding:3px 10px;font-size:.82rem}
+.chip b{font-family:Georgia,serif}
+.hr{position:relative;width:86px;height:86px;flex:none}
+.hr svg{width:100%;height:100%}
+.hr .rb{stroke:rgba(255,255,255,.25);stroke-width:7}
+.hf{fill:none;stroke:#fff;stroke-width:7;stroke-linecap:round;stroke-dasharray:213.63;stroke-dashoffset:213.63;transition:stroke-dashoffset .4s}
+.hr span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:1.35rem;font-weight:700}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--tint);padding:4px;border-radius:15px}
+.seg.two{grid-template-columns:1fr 1fr;margin-bottom:14px}
+.seg button{background:transparent;color:var(--mute);padding:9px 4px;border-radius:11px}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:0 2px 8px rgba(20,30,90,.16)}
+.seg button:disabled{opacity:.45;cursor:not-allowed}
+#lv button::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#2dbf8a}
+#lv button[data-l="medium"]::before{background:#ffb02e}
+#lv button[data-l="hard"]::before{background:var(--hot)}
+.lvbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:6px}
+.lvh{font-weight:700;margin-bottom:8px}
+.lvbox .hint{margin:8px 2px 0;font-size:.9rem}
+li{border-radius:20px;box-shadow:0 4px 14px rgba(30,40,110,.07)}
+.row input{appearance:none;-webkit-appearance:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--line);display:grid;place-content:center;background:var(--card);flex:none;cursor:pointer}
+.row input:checked{background:var(--acc);border-color:var(--acc)}
+.row input:checked::after{content:"✓";color:var(--accInk);font-weight:700;font-size:1rem}
+.t b{font-size:1.08rem}
+.tags{display:flex;gap:6px;margin-top:3px}
+.tag{font-size:.72rem;background:var(--tint);color:var(--mute);padding:2px 9px;border-radius:999px}
+.how{margin:10px 2px 0;color:var(--mute);font-size:.92rem}
+.timer{position:fixed;top:auto;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 24px rgba(30,40,120,.25)}
+.ringw{width:60px;height:60px}.ringw span{font-size:1rem}
+.toast{bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){.hf{transition:none}}
+
+</style>
+</head>
+<body>
+<main>
+<header class="hero">
+<div><h1>Daily Moves</h1><p class="sub" id="date"></p>
+<div class="chips"><span class="chip">🔥 <b id="sStreak">0</b> day streak</span><span class="chip">Week <b id="sWeek">0</b></span><span class="chip">Month <b id="sMonth">0</b></span></div></div>
+<div class="hr"><svg viewBox="0 0 86 86" aria-hidden="true"><circle class="rb" cx="43" cy="43" r="34" fill="none"/><circle class="hf" id="hRing" cx="43" cy="43" r="34" transform="rotate(-90 43 43)"/></svg><span id="sDone">0/3</span></div>
+</header>
+<div class="seg two" role="group" aria-label="View"><button id="tabToday" aria-pressed="true">Today</button><button id="tabProg" aria-pressed="false">Progress</button></div>
+<div id="vToday">
+<div class="lvbox"><div class="lvh">Difficulty</div>
+<div class="seg" id="lv" role="group" aria-label="Difficulty"><button data-l="easy">Easy</button><button data-l="medium" aria-pressed="true">Medium</button><button data-l="hard">Hard</button></div>
+<p class="hint" id="lvTip"></p></div>
+<h2>Today’s moves</h2>
+<ul id="list"></ul>
+<h2 id="bh">Bonus moves</h2>
+<p class="hint" id="hint"></p>
+<ul id="bonus"></ul>
+<button class="more" id="more" hidden>Add another move</button>
+<button class="reset" id="clear">Reset today</button>
+</div>
+<div id="vProg" hidden>
+<section class="card" style="margin-top:0">
+<h2>Your progress</h2>
+<div class="tabs"><button id="tabW" aria-pressed="true">This week</button><button id="tabM" aria-pressed="false">This month</button></div>
+<p class="sum" id="sum"></p>
+<div class="chart" id="chart"></div>
+</section>
+<section class="card">
+<h2>Badges</h2>
+<p class="sum" id="bsum"></p>
+<div class="bgrid" id="bgrid"></div>
+<button class="share" id="mkPoster">Make my result poster</button>
+</section>
+</div>
+</main>
+<section class="timer" id="timer" aria-live="polite">
+<div class="ringw"><svg viewBox="0 0 76 76" aria-hidden="true"><circle class="rb" cx="38" cy="38" r="32"/><circle class="rf" id="tRing" cx="38" cy="38" r="32" transform="rotate(-90 38 38)"/></svg><span id="tTime">00:30</span></div>
+<div class="tr"><div class="name" id="tName">Tap “Time it” on a move</div>
+<div class="btns"><button id="tGo">Start</button><button class="ghost" id="tReset">Reset</button></div></div>
+</section>
+<div class="ov" id="ov" hidden role="dialog" aria-modal="true" aria-labelledby="cT">
+<div class="conf" id="conf"></div>
+<div class="pop"><div class="badge" id="cBadge">🏅</div><h2 id="cT">3 for 3!</h2><p id="cP"></p><div class="nb" id="cNew"></div>
+<button id="cPoster">Make my result poster</button><button class="s" id="cKeep">Keep going with bonus moves</button><button class="g" id="cClose">Done for today</button></div>
+</div>
+<div class="ov" id="pov" hidden role="dialog" aria-modal="true" aria-label="Result poster">
+<div class="pop"><canvas id="pc" width="1080" height="1350"></canvas><button id="pSave">Save poster</button><button class="g" id="pClose">Close</button></div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+<script>
+(function(){
+var S=[50,18,50,28,50,55,42,40,40,52,58,40,60,52,46,72,44,88,54,72,56,88];
+var EX=[
+{n:"Squat",s:40,t:"Feet shoulder-width. Sit back like onto a chair, chest up, then stand.",
+ a:S,b:[44,30,46,40,36,66,58,42,68,42,58,42,68,42,56,68,48,88,58,68,54,88]},
+{n:"Wall push-up",s:40,w:1,t:"Hands on a wall at chest height. Bend your elbows, then push away.",
+ a:[58,22,52,32,37,56,68,33,84,34,68,33,84,34,29,72,22,88,31,72,24,88],
+ b:[72,32,66,42,44,64,76,54,84,36,76,54,84,36,33,77,22,88,35,77,24,88]},
+{n:"Forearm plank",s:30,t:"Forearms down, body in one straight line. Hold and keep breathing.",
+ a:[82,56,72,62,40,72,72,86,86,86,72,86,86,86,24,80,10,88,26,81,12,89]},
+{n:"Glute bridge",s:40,t:"Lie on your back, knees bent. Lift hips, squeeze, lower slowly.",
+ a:[10,80,22,82,46,84,34,84,44,86,34,84,44,86,62,62,66,86,64,62,68,86],
+ b:[10,80,22,82,46,64,34,84,44,86,34,84,44,86,62,62,66,86,64,62,68,86]},
+{n:"Calf raises",s:30,t:"Rise onto your toes, pause, lower slowly. Touch a wall if you need balance.",
+ a:[50,18,50,28,50,55,36,42,44,54,64,42,56,54,46,72,44,88,54,72,56,88],
+ b:[50,12,50,22,50,49,36,36,44,48,64,36,56,48,47,66,45,82,53,66,55,82]},
+{n:"High knees",s:30,t:"March fast on the spot. Lift knees to hip height and swing your arms.",
+ a:[50,18,50,28,50,55,40,40,46,32,60,40,56,48,46,72,44,88,64,54,64,70],
+ b:[50,18,50,28,50,55,40,40,46,48,60,40,54,32,36,54,36,70,54,72,56,88]},
+{n:"Arm circles",s:30,t:"Arms out wide. Make big, slow circles, then switch direction.",
+ a:[50,18,50,28,50,55,36,28,22,28,64,28,78,28,46,72,44,88,54,72,56,88],
+ b:[50,18,50,28,50,55,38,16,40,4,62,16,60,4,46,72,44,88,54,72,56,88]}
+];
+var ST=[
+{n:"Side bend stretch",s:40,t:"Reach one arm overhead and lean to the side. Switch sides halfway.",
+ a:[50,18,50,28,50,55,38,16,40,4,62,16,60,4,46,72,44,88,54,72,56,88],
+ b:[62,20,58,29,48,55,52,16,62,6,68,18,76,10,46,72,44,88,54,72,56,88]},
+{n:"Forward fold",s:40,t:"Hinge at the hips with soft knees. Let your head and arms hang.",
+ a:S,b:[72,72,62,64,40,54,66,76,68,86,66,76,68,86,41,72,42,88,43,72,44,88]},
+{n:"Standing quad stretch",s:40,t:"Hold one foot to your glute, knees together. Switch legs halfway.",
+ a:[50,18,50,28,50,55,40,38,34,34,60,38,66,34,46,72,44,88,54,72,56,88],
+ b:[50,18,50,28,50,55,40,38,34,34,62,42,62,58,46,72,44,88,54,70,62,58]}
+];
+function ln(x1,y1,x2,y2,c){return '<line'+(c?' class="'+c+'"':'')+' x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'"/>'}
+function body(p,wall){
+ var o=ln(4,90,96,90,"fl");if(wall)o+=ln(90,6,90,90,"wl");
+ o+=ln(p[0],p[1],p[2],p[3])+ln(p[2],p[3],p[4],p[5]);
+ o+=ln(p[2],p[3],p[6],p[7])+ln(p[6],p[7],p[8],p[9])+ln(p[2],p[3],p[10],p[11])+ln(p[10],p[11],p[12],p[13]);
+ o+=ln(p[4],p[5],p[14],p[15])+ln(p[14],p[15],p[16],p[17])+ln(p[4],p[5],p[18],p[19])+ln(p[18],p[19],p[20],p[21]);
+ return o+'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7"/>';
+}
+function fig(m){
+ var s='<svg class="fig" viewBox="0 0 210 104" role="img" aria-label="How to do '+m.n+'">';
+ if(m.b){
+  s+='<g>'+body(m.a,m.w)+'<text x="4" y="101">Start</text></g>';
+  s+='<polygon class="ar" points="98,48 110,48 110,43 120,51 110,59 110,54 98,54"/>';
+  s+='<g transform="translate(110,0)">'+body(m.b,m.w)+'<text x="4" y="101">Then</text></g>';
+ }else{
+  s+='<g transform="translate(55,0)">'+body(m.a,m.w)+'<text x="4" y="101">Hold</text></g>';
+ }
+ return s+'</svg>';
+}
+EX.push({n:"Jumping jacks",s:30,t:"Jump your feet wide as your arms swing overhead, then back together.",
+ a:[50,18,50,28,50,55,42,40,44,54,58,40,56,54,47,72,46,88,53,72,54,88],
+ b:[50,18,50,28,50,55,38,16,40,4,62,16,60,4,38,72,28,88,62,72,72,88]});
+EX.push({n:"Push-up",s:30,t:"Hands under shoulders, body straight. Lower your chest, then press up.",
+ a:[82,44,72,50,42,66,72,68,72,86,72,68,72,86,26,76,10,86,28,77,12,87],
+ b:[84,68,74,72,42,78,62,80,72,88,62,80,72,88,26,83,10,88,28,84,12,89]});
+EX.push({n:"Lunge",s:40,t:"Step one foot forward and bend both knees. Push back up, then switch legs.",
+ a:S,b:[50,22,50,32,50,58,38,44,46,56,62,44,54,56,38,78,26,88,64,64,64,88]});
+var RT={"Squat":2,"Wall push-up":1,"Forearm plank":3,"Glute bridge":1,"Calf raises":1,"High knees":3,"Arm circles":1,"Jumping jacks":3,"Push-up":3,"Lunge":2};
+EX.forEach(function(m){m.d=RT[m.n]||2});
+ST.forEach(function(m){m.d=1});
+var ALL=EX.concat(ST);
+var LV={easy:{n:"Easy",m:.75,t:"Gentle pace: shorter timers and easier moves."},medium:{n:"Medium",m:1,t:"A balanced mix at standard timing."},hard:{n:"Hard",m:1.4,t:"Tougher moves and longer timers. Keep a steady pace."}};
+function sc(mv){return Math.max(10,Math.round(mv.s*LV[store.level].m/5)*5)}
+function elig(m,L){return L==="easy"?m.d<=2:L==="hard"?m.d>=2:true}
+function pad(n){return(n<10?"0":"")+n}
+function dk(t){return t.getFullYear()+"-"+pad(t.getMonth()+1)+"-"+pad(t.getDate())}
+var d=new Date(),key=dk(d);
+function seed(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return function(){h=(h*1103515245+12345)|0;return((h>>>8)&0xffff)/0xffff}}
+var gi=[];
+function pick(L){
+ var r=seed(key+L),ep=[],sp=[],q;
+ for(q=0;q<EX.length;q++)if(elig(EX[q],L))ep.push(q);
+ for(q=0;q<ST.length;q++)sp.push(EX.length+q);
+ var a=ep.splice(Math.floor(r()*ep.length),1)[0],b=ep.splice(Math.floor(r()*ep.length),1)[0];
+ return [a,b,sp[Math.floor(r()*sp.length)]];
+}
+var store={done:{},extra:[],streak:0,last:"",complete:false,hist:{}};
+try{var raw=localStorage.getItem("dailymoves4");if(raw){var p=JSON.parse(raw);if(p&&typeof p==="object")store=p}}catch(e){}
+if(!store.hist)store.hist={};if(!store.extra)store.extra=[];if(!store.done)store.done={};if(!store.earned)store.earned={};if(!store.cdays)store.cdays={};
+if(store.last!==key){
+ var yd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-1),yk=dk(yd);
+ if(!(store.last===yk&&store.complete))store.streak=0;
+ store.done={};store.extra=[];store.complete=false;store.last=key;
+}
+if(!store.level||!LV[store.level])store.level="medium";gi=pick(store.level);
+function save(){try{localStorage.setItem("dailymoves4",JSON.stringify(store))}catch(e){}}
+var BADGES=[
+{id:"daily",e:"🏅",n:"Daily Done",h:"Finish 3 moves in a day"},
+{id:"bonus",e:"💫",n:"Bonus mover",h:"Finish a bonus move"},
+{id:"s3",e:"🔥",n:"3-day streak",h:"3 days in a row"},
+{id:"s7",e:"⚡",n:"7-day streak",h:"7 days in a row"},
+{id:"s14",e:"🚀",n:"14-day streak",h:"14 days in a row"},
+{id:"s30",e:"👑",n:"30-day streak",h:"30 days in a row"},
+{id:"d10",e:"🌟",n:"10 days done",h:"Finish 10 days in total"}
+];
+var fresh=[];
+function aw(id){if(!store.earned[id]){store.earned[id]=1;fresh.push(id)}}
+function nmOf(id){for(var q=0;q<BADGES.length;q++)if(BADGES[q].id===id)return BADGES[q].e+" "+BADGES[q].n;return id}
+function recompute(){
+ var n=0,x=0;
+ for(var j=0;j<3;j++)if(store.done[j])n++;
+ store.extra.forEach(function(e){if(e.done)x++});
+ if(n===3&&!store.complete){store.complete=true;store.streak=(store.streak||0)+1}
+ if(n<3&&store.complete){store.complete=false;store.streak=Math.max(0,store.streak-1)}
+ store.hist[key]=n+x;
+ if(store.complete)store.cdays[key]=1;else delete store.cdays[key];
+ var cd=Object.keys(store.cdays).length;
+ if(store.complete){aw("daily");if(store.streak>=3)aw("s3");if(store.streak>=7)aw("s7");if(store.streak>=14)aw("s14");if(store.streak>=30)aw("s30");if(cd>=10)aw("d10")}
+ if(x>0)aw("bonus");
+}
+function addExtra(){
+ var used=gi.concat(store.extra.map(function(e){return e.id})),pool=[];
+ ALL.forEach(function(m,k){if(used.indexOf(k)<0&&(k>=EX.length||elig(m,store.level)))pool.push(k)});
+ if(!pool.length)ALL.forEach(function(m,k){if(gi.indexOf(k)<0)pool.push(k)});
+ store.extra.push({id:pool[Math.floor(Math.random()*pool.length)],done:false});
+}
+function weekKeys(){var off=(d.getDay()+6)%7,a=[];for(var k=0;k<7;k++)a.push({k:dk(new Date(d.getFullYear(),d.getMonth(),d.getDate()-off+k)),l:"MTWTFSS".charAt(k)});return a}
+function monthKeys(){var n=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(),a=[];for(var k=1;k<=n;k++)a.push({k:d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(k),l:k%5===1?String(k):""});return a}
+function total(a){var t=0;a.forEach(function(x){t+=store.hist[x.k]||0});return t}
+function $(id){return document.getElementById(id)}
+document.title="Daily Moves";
+$("date").textContent=d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})+" · two exercises and a stretch";
+function card(mv,on,kind,idx){
+ var li=document.createElement("li"),st=ST.indexOf(mv)>=0;if(on)li.className="done";
+ li.innerHTML='<div class="row"><input type="checkbox"><div class="t"><b></b><div class="tags"><span class="tag"></span><span class="tag"></span></div></div><button class="go">▶ Time it</button></div><p class="how"></p>'+fig(mv);
+ var cb=li.querySelector("input");cb.checked=on;cb.setAttribute("aria-label","Mark "+mv.n+" done");
+ cb.onchange=function(){setDone(kind,idx,cb.checked)};
+ li.querySelector("b").textContent=mv.n;
+ var tg=li.querySelectorAll(".tag");tg[0].textContent=st?"Stretch":"Exercise";tg[1].textContent=sc(mv)+" sec";
+ li.querySelector(".how").textContent=mv.t;
+ li.querySelector(".go").onclick=function(){load(mv.n,sc(mv),kind,idx)};
+ return li;
+}
+var tab="week";
+function renderProg(){
+ var arr=tab==="week"?weekKeys():monthKeys(),t=0,act=0,mx=3;
+ arr.forEach(function(a){a.v=store.hist[a.k]||0;t+=a.v;if(a.v)act++;if(a.v>mx)mx=a.v});
+ $("sum").textContent=t+" moves done "+(tab==="week"?"this week":"this month")+" across "+act+" active "+(act===1?"day":"days");
+ $("chart").innerHTML=arr.map(function(a){
+  return '<div class="col" title="'+a.k+': '+a.v+'"><div class="bar'+(a.v?' has':'')+(a.k===key?' now':'')+'" style="height:'+(Math.round(a.v/mx*88)+3)+'px"></div><span>'+a.l+'</span></div>';
+ }).join("");
+ $("tabW").setAttribute("aria-pressed",tab==="week");$("tabM").setAttribute("aria-pressed",tab==="month");
+}
+var HC=213.63;
+function render(){
+ var list=$("list"),b=$("bonus"),n=0;
+ list.innerHTML="";b.innerHTML="";
+ gi.forEach(function(g,k){var on=!!store.done[k];if(on)n++;list.appendChild(card(ALL[g],on,"main",k))});
+ if(store.complete){
+  if(!store.extra.length){addExtra();addExtra();save()}
+  store.extra.forEach(function(e,k){b.appendChild(card(ALL[e.id],e.done,"extra",k))});
+  $("hint").textContent="Optional. Every extra move counts toward your week and month.";$("more").hidden=false;
+ }else{$("hint").textContent="Finish today’s three moves to unlock bonus moves.";$("more").hidden=true}
+ $("sDone").textContent=n+"/3";$("sStreak").textContent=store.streak;
+ $("sWeek").textContent=total(weekKeys());$("sMonth").textContent=total(monthKeys());
+ $("hRing").style.strokeDashoffset=HC*(1-n/3);
+ Array.prototype.forEach.call(document.querySelectorAll("#lv button"),function(q){var l=q.getAttribute("data-l");q.setAttribute("aria-pressed",l===store.level);q.disabled=store.complete&&l!==store.level});
+ $("lvTip").textContent=LV[store.level].t+(store.complete?" Level changes unlock tomorrow.":" Changing level gives you a fresh set of three.");
+ renderProg();renderBadges();
+}
+function setDone(kind,idx,v){
+ var was=store.complete;
+ if(kind==="main")store.done[idx]=v;else store.extra[idx].done=v;
+ fresh=[];recompute();save();render();
+ if(!was&&store.complete)celebrate();
+ else if(fresh.length){toast("New badge: "+fresh.map(nmOf).join(", "));fresh=[]}
+}
+var el=$("timer"),tName=$("tName"),tTime=$("tTime"),tRing=$("tRing"),tGo=$("tGo"),
+ tot=30,left=30,iv=null,cK=null,cI=-1,label="",C=201.06,IDLE="Tap “Time it” on a move";
+function fmt(s){return pad(Math.floor(s/60))+":"+pad(s%60)}
+function draw(){tTime.textContent=fmt(left);tRing.style.strokeDashoffset=C*(1-(tot-left)/tot)}
+function stop(){clearInterval(iv);iv=null;tGo.textContent=left===0?"Again":left===tot?"Start":"Resume"}
+function load(name,secs,kind,idx){stop();cK=kind;cI=idx;label=name;tot=left=secs;el.classList.remove("done");tName.textContent=name;draw();tGo.textContent="Start"}
+function beep(f){try{var A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f||880;g.gain.value=.15;o.start();setTimeout(function(){o.stop();c.close()},350)}catch(e){}if(navigator.vibrate)try{navigator.vibrate(200)}catch(e){}}
+tGo.onclick=function(){
+ if(iv){stop();return}
+ if(left===0){left=tot;el.classList.remove("done");tName.textContent=label;draw()}
+ tGo.textContent="Pause";
+ iv=setInterval(function(){
+  left--;draw();
+  if(left<=0){left=0;draw();stop();el.classList.add("done");tName.textContent=(label||"Timer")+": done";beep(880);
+   var already=cK==="main"?store.done[cI]:(cK&&store.extra[cI]&&store.extra[cI].done);
+   if(cK&&!already)setDone(cK,cI,true)}
+ },1000);
+};
+$("tReset").onclick=function(){stop();left=tot;el.classList.remove("done");tName.textContent=label||IDLE;draw();tGo.textContent="Start"};
+$("clear").onclick=function(){store.done={};store.extra=[];recompute();save();render()};
+$("more").onclick=function(){addExtra();save();render()};
+$("tabW").onclick=function(){tab="week";renderProg()};
+$("tabM").onclick=function(){tab="month";renderProg()};
+var ov=$("ov");
+function closeOv(){ov.hidden=true}
+function celebrate(){
+ var cf=$("conf"),cols=["#ff6a45","#3b4fe0","#ffc93c","#2dbf8a","#e84a9c"],h="";
+ for(var k=0;k<40;k++)h+='<span style="left:'+Math.round(Math.random()*100)+'%;background:'+cols[k%5]+';animation-delay:'+(Math.random()*.9).toFixed(2)+'s;animation-duration:'+(2+Math.random()*1.6).toFixed(2)+'s"></span>';
+ cf.innerHTML=h;
+ $("cP").textContent="Great work. Streak: "+store.streak+(store.streak===1?" day":" days")+". "+total(weekKeys())+" moves this week.";
+ $("cNew").innerHTML=fresh.filter(function(id){return id!=="daily"}).map(function(id){return"<span>"+nmOf(id)+" unlocked</span>"}).join("");fresh=[];
+ ov.hidden=false;beep(1040);$("cPoster").focus();
+}
+$("cClose").onclick=closeOv;
+$("cKeep").onclick=function(){closeOv();showTab("today");$("bh").scrollIntoView({behavior:"smooth",block:"start"})};
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){if(!ov.hidden)closeOv();$("pov").hidden=true}});
+function toast(t){var q=$("toast");q.textContent=t;q.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){q.hidden=true},3500)}
+function renderBadges(){
+ var cd=Object.keys(store.cdays).length,n=0,h="";
+ BADGES.forEach(function(b){var on=!!store.earned[b.id];if(on)n++;
+  h+='<div class="bd'+(on?'':' lock')+'"><i>'+b.e+'</i><b>'+b.n+'</b><small>'+(b.id==="daily"&&cd>0?"×"+cd+" "+(cd===1?"day":"days"):b.h)+'</small></div>'});
+ $("bgrid").innerHTML=h;$("bsum").textContent=n+" of "+BADGES.length+" badges earned";
+}
+function rr(X,x,y,w,h,r){X.beginPath();X.moveTo(x+r,y);X.arcTo(x+w,y,x+w,y+h,r);X.arcTo(x+w,y+h,x,y+h,r);X.arcTo(x,y+h,x,y,r);X.arcTo(x,y,x+w,y,r);X.closePath()}
+function drawPoster(){
+ var c=$("pc"),X=c.getContext("2d"),W=1080,H=1350,F='Georgia,"Times New Roman",serif',S2='"Avenir Next","Segoe UI",system-ui,sans-serif',k,done=store.complete;
+ X.clearRect(0,0,W,H);
+ var g=X.createLinearGradient(0,0,W,H);g.addColorStop(0,"#3447d8");g.addColorStop(1,"#0e1238");X.fillStyle=g;X.fillRect(0,0,W,H);
+ X.fillStyle="rgba(255,255,255,.07)";X.beginPath();X.arc(940,150,260,0,7);X.fill();X.beginPath();X.arc(100,1250,320,0,7);X.fill();
+ X.textAlign="center";X.fillStyle="#fff";X.font="bold 72px "+F;X.fillText("Daily Moves",W/2,130);
+ X.fillStyle="rgba(255,255,255,.75)";X.font="34px "+S2;
+ X.fillText(d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"}),W/2,190);
+ X.font="28px "+S2;X.fillText("Level: "+LV[store.level].n,W/2,236);
+ X.beginPath();X.arc(W/2,400,150,0,7);
+ if(done){var bg=X.createLinearGradient(390,250,690,550);bg.addColorStop(0,"#ffd35a");bg.addColorStop(1,"#ff9d3c");X.fillStyle=bg}else X.fillStyle="rgba(255,255,255,.12)";
+ X.fill();
+ X.font="150px "+S2;X.textBaseline="middle";X.fillStyle="#fff";X.fillText(done?"🏅":"🏃",W/2,408);X.textBaseline="alphabetic";
+ X.font="bold 56px "+F;X.fillText(done?"Daily Done":"Moves in progress",W/2,640);
+ X.font="32px "+S2;X.fillStyle="rgba(255,255,255,.75)";X.fillText(done?"All three moves complete":"Three small moves a day",W/2,692);
+ X.textAlign="left";
+ for(k=0;k<3;k++){
+  var y=780+k*78,on=!!store.done[k];
+  X.beginPath();X.arc(190,y,26,0,7);
+  if(on){X.fillStyle="#ffd35a";X.fill();X.strokeStyle="#0e1238";X.lineWidth=6;X.lineCap="round";X.lineJoin="round";X.beginPath();X.moveTo(178,y);X.lineTo(187,y+9);X.lineTo(203,y-9);X.stroke()}
+  else{X.strokeStyle="rgba(255,255,255,.5)";X.lineWidth=4;X.stroke()}
+  X.fillStyle=on?"#fff":"rgba(255,255,255,.6)";X.font="bold 42px "+S2;X.fillText(ALL[gi[k]].n,240,y+14);
+ }
+ var bx=store.extra.filter(function(e){return e.done}).length;
+ X.textAlign="center";
+ if(bx){X.fillStyle="#ffd35a";X.font="bold 34px "+S2;X.fillText("+ "+bx+" bonus "+(bx===1?"move":"moves"),W/2,1000)}
+ var st=[[store.streak,"day streak"],[total(weekKeys()),"this week"],[total(monthKeys()),"this month"]];
+ st.forEach(function(q,i){
+  var bxx=81+i*314;
+  X.fillStyle="rgba(255,255,255,.14)";rr(X,bxx,1040,290,190,28);X.fill();
+  X.fillStyle="#fff";X.font="bold 84px "+F;X.fillText(String(q[0]),bxx+145,1130);
+  X.fillStyle="rgba(255,255,255,.75)";X.font="30px "+S2;X.fillText(q[1],bxx+145,1186);
+ });
+ X.fillStyle="rgba(255,255,255,.6)";X.font="28px "+S2;X.fillText("Small goals. Every day.",W/2,1310);
+}
+function openPoster(){drawPoster();$("pov").hidden=false;$("pSave").focus()}
+async function savePoster(){
+ $("pc").toBlob(async function(blob){
+  if(!blob)return;
+  var name="daily-moves-"+key+".png",dl=null;
+  try{if(window.claude&&window.claude.use)dl=await window.claude.use("downloads")}catch(e){}
+  if(dl){try{await dl.save({filename:name,data:blob})}catch(e){}return}
+  try{var f=new File([blob],name,{type:"image/png"});
+   if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"Daily Moves"});return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+ },"image/png");
+}
+function showTab(t){$("vToday").hidden=t!=="today";$("vProg").hidden=t!=="prog";$("tabToday").setAttribute("aria-pressed",t==="today");$("tabProg").setAttribute("aria-pressed",t==="prog");window.scrollTo(0,0)}
+$("tabToday").onclick=function(){showTab("today")};
+$("tabProg").onclick=function(){showTab("prog")};
+Array.prototype.forEach.call(document.querySelectorAll("#lv button"),function(q){q.onclick=function(){
+ var L=q.getAttribute("data-l");if(store.complete||L===store.level)return;
+ store.level=L;store.done={};store.extra=[];gi=pick(L);recompute();save();cK=null;label="";$("tReset").onclick();render();
+}});
+$("mkPoster").onclick=openPoster;
+$("cPoster").onclick=function(){closeOv();openPoster()};
+$("pClose").onclick=function(){$("pov").hidden=true};
+$("pSave").onclick=savePoster;
+recompute();fresh=[];save();draw();render();
+})();
+</script>
+</body>
+</html>
